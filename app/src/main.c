@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <stm32l4xx.h>
+// Cédric Toye
+
 
 void SystickHandler(void) {
 	//Routine
@@ -31,6 +33,7 @@ int main(void) {
 	GPIOB->MODER |= (GPIO_MODER_MODE0_0|GPIO_MODER_MODE1_0|GPIO_MODER_MODE2_0|GPIO_MODER_MODE12_0|GPIO_MODER_MODE15_0);
 	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0|GPIO_OTYPER_OT1|GPIO_OTYPER_OT2|GPIO_OTYPER_OT12|GPIO_OTYPER_OT15);
 
+	//instellen van
 
 	int uren = 0;
 	int minuten = 0;
