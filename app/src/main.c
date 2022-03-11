@@ -1,7 +1,36 @@
 #include <stdint.h>
 #include <stm32l4xx.h>
 
+void SystickHandler(void) {
+	//Routine
+}
+
 int main(void) {
+
+	SysTick_Config(48000);
+
+	NVIC_SetPriority(SysTick_IRQn, 128);
+	NVIC_EnableIRQ(SysTick_IRQn);
+
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activeren klok blok A
+	RCC->AHB2ENR |= rcc_AHB2ENR_GPIOBEN_Msk; // Activeren klok blok B
+
+
+	//instellen van 7seg displays
+	GPIOA->MODER &= ~(GPIO_MODER_MODE8_Msk|GPIO_MODER_MODE15_Msk); //bitwise and operation of GPIOA MODER register and mask
+	GPIOA->MODER |= (GPIO_MODER_MODE8_0|GPIO_MODER_MODE15_0); //bitwise or operation of GPIOA MODER register and 01 bits for pin 8 and pin 15
+	GPIOA->OTYPER &= ~(GPIO_OTYPER_OT8|GPIO_OTYPER_OT15);
+
+	//instellen van segmenten
+	GPIOA -> MODER &= ~(GPIO_MODER_MODE5_Msk|GPIO_MODER_MODE7_Msk);
+	GPIOA -> MODER |= (GPIO_MODER_MODE5_0|GPIO_MODER_MODE7_0);
+	GPIOA->OTYPER &= ~(GPIO_OTYPER_OT5|GPIO_OTYPER_OT7);
+
+
+	GPIOB->MODER &= ~(GPIO_MODER_MODE0_Msk|GPIO_MODER_MODE1_Msk|GPIO_MODER_MODE2_Msk|GPIO_MODER_MODE12_Msk|GPIO_MODER_MODE15_Msk);
+	GPIOB->MODER |= (GPIO_MODER_MODE0_0|GPIO_MODER_MODE1_0|GPIO_MODER_MODE2_0|GPIO_MODER_MODE12_0|GPIO_MODER_MODE15_0);
+	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0|GPIO_OTYPER_OT1|GPIO_OTYPER_OT2|GPIO_OTYPER_OT12|GPIO_OTYPER_OT15);
+
 
 	int uren = 0;
 	int minuten = 0;
