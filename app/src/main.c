@@ -7,8 +7,8 @@ int uren = 0;
 int minuten = 0;
 int ms = 0;
 
-void Systick(void){
-	//Routine
+void _Handler(unsigned int n){
+	n++;
 }
 
 void SysTick_Handler(void) {
@@ -125,6 +125,10 @@ int main(void) {
 	NVIC_SetPriority(SysTick_IRQn, 128);
 	NVIC_EnableIRQ(SysTick_IRQn);
 
+	//Need to set another interrupt with a higher priority
+	//NVIC_SetPriority(_IRQn, 127);
+	//NVIC_EnableIRQ(_IRQn);
+
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
 
@@ -155,8 +159,6 @@ int main(void) {
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPD14_0;
 
 	while (1) {
-		if(){
-
 		}
 	}
 }
