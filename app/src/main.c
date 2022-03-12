@@ -7,6 +7,10 @@ int uren = 0;
 int minuten = 0;
 int ms = 0;
 
+void Systick(void){
+	//Routine
+}
+
 void SysTick_Handler(void) {
 	switch(mux){
 		case 0:
@@ -95,7 +99,7 @@ void segments(unsigned int n){
 
 		case 6:
 			GPIOA->ODR |= GPIO_ODR_OD5;
-			GPIOB->ODR |= (GPIO_ODR_OD0|GPIO_ODR_OD1|GPIO_ODR_OD2|GPIO_ODR_OD12);
+			GPIOB->ODR |= (GPIO_ODR_OD0|GPIO_ODR_OD1|GPIO_ODR_OD2|GPIO_ODR_OD12|GPIO_ODR_OD15);
 			break;
 
 		case 7:
@@ -151,6 +155,8 @@ int main(void) {
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPD14_0;
 
 	while (1) {
+		if(){
 
+		}
 	}
 }
