@@ -7,8 +7,15 @@ int uren = 0;
 int minuten = 0;
 int ms = 0;
 
-//void _Handler(unsigned int n){
-//	n++;
+//void _Handler(void){
+	//if (!(GPIOB->IDR  & GPIO_IDR_ID13)) {
+		//uren++;
+		//}
+
+	//else if (!(GPIOB->IDR & GPIO_IDR_ID14)){
+		//minuten++;
+		//}
+	//n++;
 //}
 
 void SysTick_Handler(void) {
