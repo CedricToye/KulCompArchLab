@@ -7,9 +7,9 @@ int uren = 0;
 int minuten = 0;
 int ms = 0;
 
-void _Handler(unsigned int n){
-	n++;
-}
+//void _Handler(unsigned int n){
+//	n++;
+//}
 
 void SysTick_Handler(void) {
 	switch(mux){
