@@ -132,7 +132,7 @@ int main(void) {
 	NVIC_EnableIRQ(SysTick_IRQn);
 
 	//Need to set another interrupt with a higher priority
-	NVIC_SetPriority(EXTI15_10_IRQn, 127);
+	NVIC_SetPriority(EXTI15_10_IRQn, 129);
 	NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
@@ -176,5 +176,6 @@ int main(void) {
 	EXTI->IMR1 |= EXTI_IMR1_IM14;
 
 	while (1) {
-		}
+
 	}
+}
