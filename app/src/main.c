@@ -8,11 +8,11 @@ int minuten = 0;
 int ms = 0;
 
 void EXTI15_10_Handler(void){
-	if (!(GPIOB->IDR  & GPIO_IDR_ID13)) {
+	if (EXTI->PR1 & EXTI_PR1_PIF13) {
 		uren++;
 		}
 
-	else if (!(GPIOB->IDR & GPIO_IDR_ID14)){
+	else if (EXTI->PR1 & EXTI_PR1_PIF14){
 		minuten++;
 		}
 	}
@@ -137,7 +137,7 @@ int main(void) {
 
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
-
+	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
 	//setting multiplexer
 	GPIOA->MODER &= ~(GPIO_MODER_MODE8_Msk|GPIO_MODER_MODE15_Msk); // bitwise and operation of GPIOA MODER register and mask
