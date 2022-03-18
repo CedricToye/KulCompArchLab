@@ -58,7 +58,7 @@ void SysTick_Handler(void) {
 		mux = 0;
 	}
 
-	if(ms == 1000){
+	if(ms == 60000){
 		ms = 0;
 		minuten++;
 		if(minuten > 59){
@@ -181,11 +181,19 @@ int main(void) {
 
 	while (1) {
         if (!(GPIOB->IDR  & GPIO_IDR_ID13)) {
-            uren++;
+            minuten++;
+            if(minuten > 59){
+				minuten = 0;
+            }
+            delay(1000000);
         }
 
         if (!(GPIOB->IDR & GPIO_IDR_ID14)){
-            minuten++;
+            uren++;
+            if(uren > 23){
+				uren = 0;
+			}
+            delay(1000000);
             }
 	}
 
