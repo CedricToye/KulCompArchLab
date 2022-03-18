@@ -17,6 +17,11 @@ int ms = 0;
 //		}
 //	}
 
+void delay(unsigned int n){
+    volatile unsigned int delay = n;
+    while (delay--);
+}
+
 void SysTick_Handler(void) {
 	switch(mux){
 		case 0:
