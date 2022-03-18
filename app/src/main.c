@@ -7,15 +7,15 @@ int uren = 0;
 int minuten = 0;
 int ms = 0;
 
-void EXTI15_10_Handler(void){
-	if (EXTI->PR1 & EXTI_PR1_PIF13) {
-		uren++;
-		}
+//void EXTI15_10_Handler(void){
+//	if (EXTI->PR1 & EXTI_PR1_PIF13) {
+//		uren++;
+//		}
 
-	else if (EXTI->PR1 & EXTI_PR1_PIF14){
-		minuten++;
-		}
-	}
+//	else if (EXTI->PR1 & EXTI_PR1_PIF14){
+//		minuten++;
+//		}
+//	}
 
 void SysTick_Handler(void) {
 	switch(mux){
@@ -131,13 +131,12 @@ int main(void) {
 	NVIC_SetPriority(SysTick_IRQn, 128);
 	NVIC_EnableIRQ(SysTick_IRQn);
 
-	//Need to set another interrupt with a higher priority
-	NVIC_SetPriority(EXTI15_10_IRQn, 129);
-	NVIC_EnableIRQ(EXTI15_10_IRQn);
+//	NVIC_SetPriority(EXTI15_10_IRQn, 129);
+//	NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
-	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+//	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 
 	//setting multiplexer
 	GPIOA->MODER &= ~(GPIO_MODER_MODE8_Msk|GPIO_MODER_MODE15_Msk); // bitwise and operation of GPIOA MODER register and mask
@@ -164,18 +163,25 @@ int main(void) {
 	GPIOB->PUPDR |= GPIO_PUPDR_PUPD14_0;
 
 	//Buttons routeren naar de EXTI
-	SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13_Msk;
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;
-	SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI14_Msk;
-	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI14_PB;
+//	SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13_Msk;
+//	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PB;
+//	SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI14_Msk;
+//	SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI14_PB;
 
 	//Falling edge interrupt aanzetten
-	EXTI->FTSR1 |= EXTI_FTSR1_FT13;
-	EXTI->IMR1 |= EXTI_IMR1_IM13;
-	EXTI->FTSR1 |= EXTI_FTSR1_FT14;
-	EXTI->IMR1 |= EXTI_IMR1_IM14;
+//	EXTI->FTSR1 |= EXTI_FTSR1_FT13;
+//	EXTI->IMR1 |= EXTI_IMR1_IM13;
+//	EXTI->FTSR1 |= EXTI_FTSR1_FT14;
+//	EXTI->IMR1 |= EXTI_IMR1_IM14;
 
 	while (1) {
+        if (!(GPIOB->IDR  & GPIO_IDR_ID13)) {
+            uren++;
+        }
 
+        if (!(GPIOB->IDR & GPIO_IDR_ID14)){
+            minuten++;
+            }
 	}
+
 }
