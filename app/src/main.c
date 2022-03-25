@@ -199,7 +199,7 @@ int main(void) {
 			if (minuten > 59) {
 				minuten = 0;
 			}
-			delay(1000000);
+			delay(2500000);
 		}
 
 		if (!(GPIOB->IDR & GPIO_IDR_ID14)) {
@@ -207,7 +207,7 @@ int main(void) {
 			if (uren > 23) {
 				uren = 0;
 			}
-			delay(1000000);
+			delay(2500000);
 		}
 	}
 
