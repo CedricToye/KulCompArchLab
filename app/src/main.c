@@ -21,7 +21,6 @@ void SysTick_Handler(void) {
 		break;
 	case 1:
 		clear();
-		GPIOA->ODR |= GPIO_ODR_OD6;
 		GPIOA->ODR |= GPIO_ODR_OD8;
 		GPIOA->ODR &= ~GPIO_ODR_OD15;
 		segments((temperatuur / 100) % 10);
@@ -123,15 +122,38 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
 
+	// Klok selecteren
+	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
+	RCC->CCIPR |= (RCC_CCIPR_ADCSEL_0 | RCC_CCIPR_ADCSEL_1);
+
+	// Deep powerdown modus uitzetten
+	ADC1->CR &= ~ADC_CR_DEEPPWD;
+
+	// ADC voltage regulator aanzetten
+	ADC1->CR |= ADC_CR_ADVREGEN;
+
+	// Delay 20 microseconds
+	delay(1500);
+
+	// Kalibratie starten
+	ADC1->CR |= ADC_CR_ADCAL;
+	while(ADC1->CR & ADC_CR_ADCAL);
+
+	//ADC aanzetten
+	ADC1->CR |= ADC_CR_ADEN;
+
+	// Kanalen instellen
+	ADC1->SMPR1 |= (ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2);
+	ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
+
+	//Setting NTC as analog
+	GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk; // bits op 0 zetten
+	GPIOA->MODER |= GPIO_MODER_MODE0_0 | GPIO_MODER_MODE0_1; // Bit 0 en 1 hoog zetten voor analoge modus
+
 	//setting multiplexer
 	GPIOA->MODER &= ~(GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE15_Msk); // bitwise and operation of GPIOA MODER register and mask
 	GPIOA->MODER |= (GPIO_MODER_MODE8_0 | GPIO_MODER_MODE15_0); // bitwise or operation of GPIOA MODER register and 01 bits for pin 8 and pin 15
 	GPIOA->OTYPER &= ~(GPIO_OTYPER_OT8 | GPIO_OTYPER_OT15);
-
-	//Setting NTC as analog
-	GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk;
-	GPIOA->MODER |= GPIO_MODER_MODE0_0; // Bit 0 en 1 hoog zetten voor analoge modus
-	GPIOA->MODER |= GPIO_MODER_MODE0_1;
 
 	//setting segments
 	GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk | GPIO_MODER_MODE6_Msk
@@ -148,38 +170,14 @@ int main(void) {
 	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
-	// Klok selecteren
-	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
-	RCC->CCIPR |= (RCC_CCIPR_ADCSEL_0 | RCC_CCIPR_ADCSEL_1);
-
-	// Deep powerdown modus uitzetten
-	ADC1->CR &= ~ADC_CR_DEEPPWD;
-
-	// ADC voltage regulator aanzetten
-	ADC1->CR |= ADC_CR_ADVREGEN;
-
-	// Delay 20 microseconds
-	delay(960);
-
-	// Kalibratie starten
-	ADC1->CR |= ADC_CR_ADCAL;
-	while(ADC1->CR & ADC_CR_ADCAL);
-
-	//ADC aanzetten
-	ADC1->CR |= ADC_CR_ADEN;
-
-	// Kanalen instellen
-	ADC1->SMPR1 |= (ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2);
-	ADC1->SQR1 |= (ADC_SQR1_L_0 | ADC_SQR1_L_2);
-
-
 	while (1) {
 		 // Start de ADC en wacht tot de sequentie klaar is
 		 ADC1->CR |= ADC_CR_ADSTART;
 		 while(!(ADC1->ISR & ADC_ISR_EOS));
 
 		 // Lees de waarde in
-		 temperatuur = ADC1->DR;
+		 value = ADC1->DR;
+
 		 delay(1000000);
 	}
 
