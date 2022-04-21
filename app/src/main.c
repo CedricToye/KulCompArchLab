@@ -4,6 +4,9 @@
 
 int mux = 0;
 int temperatuur = 0;
+float value;
+float V;
+float R;
 
 void delay(unsigned int n) {
 	volatile unsigned int delay = n;
@@ -27,6 +30,7 @@ void SysTick_Handler(void) {
 		break;
 	case 2:
 		clear();
+		GPIOA->ODR |= GPIO_ODR_OD6;
 		GPIOA->ODR &= ~GPIO_ODR_OD8;
 		GPIOA->ODR |= GPIO_ODR_OD15;
 		segments((temperatuur % 100) / 10);
@@ -177,6 +181,9 @@ int main(void) {
 
 		 // Lees de waarde in
 		 value = ADC1->DR;
+		 V = (value*3.0f)/4096.0f;
+	     R = (10000.0f*V)/(3.0f-V);
+	     temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
 		 delay(1000000);
 	}
