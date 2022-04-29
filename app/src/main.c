@@ -3,7 +3,7 @@
 // Cédric Toye
 
 int mux = 0;
-int temperatuur = 0;
+int temperatuur;
 float value;
 float V;
 float R;
@@ -147,7 +147,7 @@ int main(void) {
 	ADC1->CR |= ADC_CR_ADEN;
 
 	// Kanalen instellen
-	ADC1->SMPR1 |= (ADC_SMPR1_SMP0_0 | ADC_SMPR1_SMP0_1 | ADC_SMPR1_SMP0_2);
+	ADC1->SMPR1 |= (ADC_SMPR1_SMP5_0 | ADC_SMPR1_SMP5_1 | ADC_SMPR1_SMP5_2);
 	ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
 
 	//Setting NTC as analog
