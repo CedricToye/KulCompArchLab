@@ -126,6 +126,17 @@ void segments(unsigned int n) {
 	}
 }
 
+void tune(void) {
+	TIM16->ARR = 48000;
+	TIM16->CCR1 = 24000;
+	delay(4000000);
+
+
+	TIM16->ARR = 24000;
+	TIM16->CCR1 = 12000;
+	delay(4000000);
+}
+
 int main(void) {
 
 	SysTick_Config(48000);
@@ -203,6 +214,7 @@ int main(void) {
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
 	while (1) {
+		 tune();
 		 // Start de ADC en wacht tot de sequentie klaar is
 
 		 // kanaal instellen
@@ -218,7 +230,6 @@ int main(void) {
 		 R = (10000.0f*V)/(3.0f-V);
 		 temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
-		 delay(1000000);
 
 		 //Kanaal instellen
 		 ADC1->SQR1 &= ~(ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
@@ -228,8 +239,6 @@ int main(void) {
 
 		 //Waarde inlezen
 		 value_POT = ADC1->DR;
-
-		 delay(1000000);
 
 		 limit();
 
