@@ -60,7 +60,7 @@ void clear(void) {
 }
 
 void limit(void){
-	if (value_NTC > value_POT){
+	if (value_NTC < value_POT){
 		TIM16->BDTR |= TIM_BDTR_MOE;
 	}
 	else{
