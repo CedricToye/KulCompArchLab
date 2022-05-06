@@ -210,6 +210,7 @@ int main(void) {
 		 R = (10000.0f*V)/(3.0f-V);
 		 temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
+		 printf('%.1f °C /n', temperatuur);
 		 delay(1000000);
 	}
 }
