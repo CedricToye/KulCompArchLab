@@ -168,7 +168,8 @@ int main(void) {
 
 	//00: CC1 channel is configured as output
 	TIM16->CCMR1 &= ~TIM_CCMR1_CC1S;
-	//Selecteren van de PWM mode - 110 - PWM mode 1, wat doet OC1FE?
+	//Selecteren van de PWM mode - 110 - PWM mode 1
+	//OC1FE used to accelerate the effect of an event on the trigger in input on the CC output.
 	TIM16->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1FE;
 	//On - OC1 signal is output on the corresponding output pin
 	TIM16->CCER |= TIM_CCER_CC1E;
