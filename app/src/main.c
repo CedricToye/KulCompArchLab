@@ -59,11 +59,12 @@ void clear(void) {
 			| GPIO_ODR_OD2);
 }
 
-void limit(void){
-	if (value_NTC < value_POT){
+void limit(void) {
+	if (value_NTC < value_POT) {
+		//the MOE bit in TIMx_BDTR register allows to enable /disable the outputs by software
 		TIM16->BDTR |= TIM_BDTR_MOE;
-	}
-	else{
+		tune();
+	} else {
 		TIM16->BDTR &= ~TIM_BDTR_MOE;
 	}
 }
@@ -131,7 +132,6 @@ void tune(void) {
 	TIM16->CCR1 = 24000;
 	delay(4000000);
 
-
 	TIM16->ARR = 24000;
 	TIM16->CCR1 = 12000;
 	delay(4000000);
@@ -147,26 +147,36 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN; // Activating clock ADC
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
-	RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;
+	RCC->APB2ENR |= RCC_APB2ENR_TIM16EN; // Activating clock Timer
 
-	// Klok selecteren
+	// Klok selecteren voor ADC
 	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
 	RCC->CCIPR |= (RCC_CCIPR_ADCSEL_0 | RCC_CCIPR_ADCSEL_1);
 
 	//Timer
 	GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
-	GPIOB->MODER |=  GPIO_MODER_MODE8_1;
+	GPIOB->MODER |= GPIO_MODER_MODE8_1;
 	GPIOB->OTYPER &= ~GPIO_OTYPER_OT8;
-	GPIOB->AFR[1] = (GPIOB->AFR[1] & (~GPIO_AFRH_AFSEL8_Msk)) | (0xE << GPIO_AFRH_AFSEL8_Pos);
+	//Bits in afr[1] register laag zetten en dan? Wat doet afr register?
+	GPIOB->AFR[1] = (GPIOB->AFR[1] & (~GPIO_AFRH_AFSEL8_Msk))
+			| (0xE << GPIO_AFRH_AFSEL8_Pos);
 
+	//the value to be loaded in the active prescaler register at each update event
 	TIM16->PSC = 0;
+	//the value to be loaded in the actual auto-reload register
 	TIM16->ARR = 24000;
+	//the value to be loaded in the actual capture/compare 1 register - configured as output
 	TIM16->CCR1 = 12000;
 
+	//00: CC1 channel is configured as output
 	TIM16->CCMR1 &= ~TIM_CCMR1_CC1S;
+	//Selecteren van de PWM mode - 110 - PWM mode 1, wat doet OC1FE?
 	TIM16->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1FE;
+	//On - OC1 signal is output on the corresponding output pin
 	TIM16->CCER |= TIM_CCER_CC1E;
+	//OC1 actief hoog instellen
 	TIM16->CCER &= ~TIM_CCER_CC1P;
+	//Enabe the counter
 	TIM16->CR1 |= TIM_CR1_CEN;
 
 	// Deep powerdown modus uitzetten
@@ -180,7 +190,8 @@ int main(void) {
 
 	// Kalibratie starten
 	ADC1->CR |= ADC_CR_ADCAL;
-	while(ADC1->CR & ADC_CR_ADCAL);
+	while (ADC1->CR & ADC_CR_ADCAL)
+		;
 
 	//ADC aanzetten
 	ADC1->CR |= ADC_CR_ADEN;
@@ -214,33 +225,35 @@ int main(void) {
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
 	while (1) {
-		 tune();
-		 // Start de ADC en wacht tot de sequentie klaar is
+		// Start de ADC en wacht tot de sequentie klaar is
 
-		 // kanaal instellen
-		 ADC1->SQR1 &= ~(ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
-		 ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
-		 ADC1->CR |= ADC_CR_ADSTART;
-		 while(!(ADC1->ISR & ADC_ISR_EOC));
+		// kanaal instellen
+		ADC1->SQR1 &= ~(ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
+		ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
+		ADC1->CR |= ADC_CR_ADSTART;
+		while (!(ADC1->ISR & ADC_ISR_EOC))
+			;
 
-		 //value NTC inlezen en converteren
-		 value_NTC = ADC1->DR;
+		//value NTC inlezen en converteren
+		value_NTC = ADC1->DR;
 
-		 V = (value_NTC*3.0f)/4096.0f;
-		 R = (10000.0f*V)/(3.0f-V);
-		 temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
+		V = (value_NTC * 3.0f) / 4096.0f;
+		R = (10000.0f * V) / (3.0f - V);
+		temperatuur = 10
+				* ((1.0f / ((logf(R / 10000.0f) / 3936.0f) + (1.0f / 298.15f)))
+						- 273.15f);
 
+		//Kanaal instellen
+		ADC1->SQR1 &= ~(ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
+		ADC1->SQR1 |= (ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
+		ADC1->CR |= ADC_CR_ADSTART;
+		while (!(ADC1->ISR & ADC_ISR_EOC))
+			;
 
-		 //Kanaal instellen
-		 ADC1->SQR1 &= ~(ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
-		 ADC1->SQR1 |= (ADC_SQR1_SQ1_1 | ADC_SQR1_SQ1_2);
-		 ADC1->CR |= ADC_CR_ADSTART;
-		 while(!(ADC1->ISR & ADC_ISR_EOC));
+		//Waarde inlezen
+		value_POT = ADC1->DR;
 
-		 //Waarde inlezen
-		 value_POT = ADC1->DR;
-
-		 limit();
+		limit();
 
 	}
 }
