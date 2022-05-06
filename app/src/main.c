@@ -58,6 +58,11 @@ void clear(void) {
 			| GPIO_ODR_OD2);
 }
 
+int __io_putchar(int ch){
+    while(!(USART1->ISR & USART_ISR_TXE));
+    USART1->TDR = ch;
+}
+
 void segments(unsigned int n) {
 	switch (n) {
 	case 0:
@@ -126,6 +131,7 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN; // Activating clock ADC
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
+	RCC->APB2ENR |= RCC_APB2ENR_USART1EN; //Activating clock block UART
 
 	// Klok selecteren
 	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
@@ -152,6 +158,15 @@ int main(void) {
 	// kanaal instellen
 	ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
 
+	//setting GPIO
+	GPIOA->MODER &= ~GPIO_MODER_MODE9_Msk;
+	GPIOA->MODER |=  GPIO_MODER_MODE9_1;
+	GPIOA->OTYPER &= ~GPIO_OTYPER_OT9;
+	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL9_Msk)) | (0x7 << GPIO_AFRH_AFSEL9_Pos);
+
+	GPIOA->MODER &= ~GPIO_MODER_MODE10_Msk;
+	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL10_Msk)) | (0x7 << GPIO_AFRH_AFSEL10_Pos);
+
 	//Setting NTC as analog
 	GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk; // bits op 0 zetten
 	GPIOA->MODER |= GPIO_MODER_MODE0_0 | GPIO_MODER_MODE0_1; // Bit 0 en 1 hoog zetten voor analoge modus
@@ -175,6 +190,13 @@ int main(void) {
 			| GPIO_MODER_MODE2_0 | GPIO_MODER_MODE12_0 | GPIO_MODER_MODE15_0);
 	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
+
+	//UART configureren
+	USART1->CR1 = 0;
+	USART1->CR2 = 0;
+	USART1->CR3 = 0;
+	USART1->BRR = 417;
+	USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 
 	while (1) {
 		 // Start de ADC en wacht tot de omzetting klaar is
