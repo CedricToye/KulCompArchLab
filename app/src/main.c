@@ -160,6 +160,7 @@ int main(void) {
 	GPIOB->MODER |= GPIO_MODER_MODE8_1;
 	GPIOB->OTYPER &= ~GPIO_OTYPER_OT8;
 	//Bits in afr[1] register laag zetten en dan? Wat doet afr register?
+	//[1] zet alles laag, 0xE AF14 -> Timer 16, die zetten ze op pin 8
 	GPIOB->AFR[1] = (GPIOB->AFR[1] & (~GPIO_AFRH_AFSEL8_Msk))
 			| (0xE << GPIO_AFRH_AFSEL8_Pos);
 
