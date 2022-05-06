@@ -132,7 +132,9 @@ void tune(void) {
 	TIM16->CCR1 = 24000;
 	delay(4000000);
 
+	//the value to be loaded in the actual auto-reload register
 	TIM16->ARR = 24000;
+	//the value to be loaded in the actual capture/compare 1 register - configured as output
 	TIM16->CCR1 = 12000;
 	delay(4000000);
 }
@@ -163,10 +165,6 @@ int main(void) {
 
 	//the value to be loaded in the active prescaler register at each update event
 	TIM16->PSC = 0;
-	//the value to be loaded in the actual auto-reload register
-	TIM16->ARR = 24000;
-	//the value to be loaded in the actual capture/compare 1 register - configured as output
-	TIM16->CCR1 = 12000;
 
 	//00: CC1 channel is configured as output
 	TIM16->CCMR1 &= ~TIM_CCMR1_CC1S;
