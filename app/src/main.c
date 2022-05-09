@@ -3,11 +3,10 @@
 // Cédric Toye
 
 int mux = 0;
-int temperatuur = 0;
+int temperatuur;
+float value;
 float V;
 float R;
-
-float value_NTC;
 
 void delay(unsigned int n) {
 	volatile unsigned int delay = n;
@@ -56,11 +55,6 @@ void clear(void) {
 	GPIOA->ODR &= ~(GPIO_ODR_OD7 | GPIO_ODR_OD5 | GPIO_ODR_OD6);
 	GPIOB->ODR &= ~(GPIO_ODR_OD0 | GPIO_ODR_OD12 | GPIO_ODR_OD15 | GPIO_ODR_OD1
 			| GPIO_ODR_OD2);
-}
-
-int __io_putchar(int ch){
-    while(!(USART1->ISR & USART_ISR_TXE));
-    USART1->TDR = ch;
 }
 
 void segments(unsigned int n) {
@@ -121,6 +115,11 @@ void segments(unsigned int n) {
 	}
 }
 
+int __io_putchar(int ch){
+    while(!(USART1->ISR & USART_ISR_TXE));
+    USART1->TDR = ch;
+}
+
 int main(void) {
 
 	SysTick_Config(48000);
@@ -155,17 +154,7 @@ int main(void) {
 
 	// Kanalen instellen
 	ADC1->SMPR1 |= (ADC_SMPR1_SMP5_0 | ADC_SMPR1_SMP5_1 | ADC_SMPR1_SMP5_2);
-	// kanaal instellen
 	ADC1->SQR1 |= (ADC_SQR1_SQ1_0 | ADC_SQR1_SQ1_2);
-
-	//setting GPIO
-	GPIOA->MODER &= ~GPIO_MODER_MODE9_Msk;
-	GPIOA->MODER |=  GPIO_MODER_MODE9_1;
-	GPIOA->OTYPER &= ~GPIO_OTYPER_OT9;
-	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL9_Msk)) | (0x7 << GPIO_AFRH_AFSEL9_Pos);
-
-	GPIOA->MODER &= ~GPIO_MODER_MODE10_Msk;
-	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL10_Msk)) | (0x7 << GPIO_AFRH_AFSEL10_Pos);
 
 	//Setting NTC as analog
 	GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk; // bits op 0 zetten
@@ -191,6 +180,15 @@ int main(void) {
 	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
+	//setting GPIO
+	GPIOA->MODER &= ~GPIO_MODER_MODE9_Msk;
+	GPIOA->MODER |=  GPIO_MODER_MODE9_1;
+	GPIOA->OTYPER &= ~GPIO_OTYPER_OT9;
+	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL9_Msk)) | (0x7 << GPIO_AFRH_AFSEL9_Pos);
+
+	GPIOA->MODER &= ~GPIO_MODER_MODE10_Msk;
+	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL10_Msk)) | (0x7 << GPIO_AFRH_AFSEL10_Pos);
+
 	//UART configureren
 	USART1->CR1 = 0;
 	USART1->CR2 = 0;
@@ -199,18 +197,19 @@ int main(void) {
 	USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
 
 	while (1) {
-		 // Start de ADC en wacht tot de omzetting klaar is
+		 // Start de ADC en wacht tot de sequentie klaar is
 		 ADC1->CR |= ADC_CR_ADSTART;
-		 while(!(ADC1->ISR & ADC_ISR_EOC));
+		 while(!(ADC1->ISR & ADC_ISR_EOS));
 
-		 //value NTC inlezen en converteren
-		 value_NTC = ADC1->DR;
+		 // Lees de waarde in
+		 value = ADC1->DR;
+		 V = (value*3.0f)/4096.0f;
+	     R = (10000.0f*V)/(3.0f-V);
+	     temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
-		 V = (value_NTC*3.0f)/4096.0f;
-		 R = (10000.0f*V)/(3.0f-V);
-		 temperatuur = 10*((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
+		 printf('%.1f /n', temperatuur);
 
-		 printf('%.1f °C /n', temperatuur);
 		 delay(1000000);
 	}
+
 }
