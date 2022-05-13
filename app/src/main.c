@@ -2,7 +2,6 @@
 #include <stm32l4xx.h>
 // Cédric Toye
 
-int tick = 0;
 float temperatuur;
 float value;
 float V;
@@ -15,7 +14,6 @@ void delay(unsigned int n) {
 }
 
 void SysTick_Handler(void) {
-	tick++;
 }
 
 int __io_putchar(int ch){
@@ -35,7 +33,7 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
 	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN; // Activating clock I2C
 
-	// Klok selecteren
+	// Klok selecteren voor ADC
 	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
 	RCC->CCIPR |= (RCC_CCIPR_ADCSEL_0 | RCC_CCIPR_ADCSEL_1);
 
@@ -80,21 +78,16 @@ int main(void) {
 	I2C1->CR1 |= I2C_CR1_PE;
 
 	while (1) {
-	     if (tick == 1000){
-			 // Start de ADC en wacht tot de sequentie klaar is
-			 ADC1->CR |= ADC_CR_ADSTART;
-			 while(!(ADC1->ISR & ADC_ISR_EOS));
+		 // Start de ADC en wacht tot de sequentie klaar is
+		 ADC1->CR |= ADC_CR_ADSTART;
+		 while(!(ADC1->ISR & ADC_ISR_EOS));
 
-			 // Lees de waarde in
-			 value = ADC1->DR;
-			 V = (value*3.0f)/4096.0f;
-			 R = (10000.0f*V)/(3.0f-V);
-			 temperatuur = ((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
+		 // Lees de waarde in
+		 value = ADC1->DR;
+		 V = (value*3.0f)/4096.0f;
+		 R = (10000.0f*V)/(3.0f-V);
+		 temperatuur = ((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
-
-			 printf("T=%.1f°C\r\n", temperatuur);
-			 tick = 0;
-	     }
 	}
 
 }
