@@ -33,7 +33,7 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_ADCEN; // Activating clock ADC
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
-	RCC->APB2ENR |= RCC_APB2ENR_USART1EN; //Activating clock block UART
+	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN; // Activating clock I2C
 
 	// Klok selecteren
 	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
@@ -63,21 +63,21 @@ int main(void) {
 	GPIOA->MODER &= ~GPIO_MODER_MODE0_Msk; // bits op 0 zetten
 	GPIOA->MODER |= GPIO_MODER_MODE0_0 | GPIO_MODER_MODE0_1; // Bit 0 en 1 hoog zetten voor analoge modus
 
-	//setting GPIO
-	GPIOA->MODER &= ~GPIO_MODER_MODE9_Msk;
-	GPIOA->MODER |=  GPIO_MODER_MODE9_1;
-	GPIOA->OTYPER &= ~GPIO_OTYPER_OT9;
-	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL9_Msk)) | (0x7 << GPIO_AFRH_AFSEL9_Pos);
+	//Setting GPIO
+	GPIOB->MODER &= ~GPIO_MODER_MODE6_Msk;
+	GPIOB->MODER |=  GPIO_MODER_MODE6_1;
+	GPIOB->OTYPER |= GPIO_OTYPER_OT6;
+	GPIOB->AFR[0] = (GPIOB->AFR[0] & (~GPIO_AFRL_AFSEL6_Msk)) | (0x4 << GPIO_AFRL_AFSEL6_Pos);
 
-	GPIOA->MODER &= ~GPIO_MODER_MODE10_Msk;
-	GPIOA->AFR[1] = (GPIOA->AFR[1] & (~GPIO_AFRH_AFSEL10_Msk)) | (0x7 << GPIO_AFRH_AFSEL10_Pos);
+	GPIOB->MODER &= ~GPIO_MODER_MODE7_Msk;
+	GPIOB->MODER |=  GPIO_MODER_MODE7_1;
+	GPIOB->OTYPER |= GPIO_OTYPER_OT7;
+	GPIOB->AFR[0] = (GPIOB->AFR[0] & (~GPIO_AFRL_AFSEL7_Msk)) | (0x4 << GPIO_AFRL_AFSEL7_Pos);
 
-	//UART configureren
-	USART1->CR1 = 0;
-	USART1->CR2 = 0;
-	USART1->CR3 = 0;
-	USART1->BRR = 417;
-	USART1->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_UE;
+	//I2C module instellen, voor 100kHz clock
+	I2C1->TIMINGR = 0x20303E5D;
+	I2C1->CR2 |= (I2C_CR2_AUTOEND | I2C_CR2_NACK);
+	I2C1->CR1 |= I2C_CR1_PE;
 
 	while (1) {
 	     if (tick == 1000){
