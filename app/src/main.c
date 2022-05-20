@@ -78,15 +78,7 @@ int main(void) {
 	I2C1->CR1 |= I2C_CR1_PE;
 
 	while (1) {
-		 // Start de ADC en wacht tot de sequentie klaar is
-		 ADC1->CR |= ADC_CR_ADSTART;
-		 while(!(ADC1->ISR & ADC_ISR_EOS));
 
-		 // Lees de waarde in
-		 value = ADC1->DR;
-		 V = (value*3.0f)/4096.0f;
-		 R = (10000.0f*V)/(3.0f-V);
-		 temperatuur = ((1.0f/((logf(R/10000.0f)/3936.0f)+(1.0f/298.15f)))-273.15f);
 
 	}
 
