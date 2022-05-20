@@ -14,11 +14,40 @@ void delay(unsigned int n) {
 }
 
 void SysTick_Handler(void) {
-}
+	switch (mux) {
+	case 0:
+		clear();
+		GPIOA->ODR &= ~GPIO_ODR_OD8;
+		GPIOA->ODR &= ~GPIO_ODR_OD15;
+		segments( / 1000);
+		break;
+	case 1:
+		clear();
+		GPIOA->ODR |= GPIO_ODR_OD8;
+		GPIOA->ODR &= ~GPIO_ODR_OD15;
+		segments(( / 100) % 10);
+		break;
+	case 2:
+		clear();
+		GPIOA->ODR |= GPIO_ODR_OD6;
+		GPIOA->ODR &= ~GPIO_ODR_OD8;
+		GPIOA->ODR |= GPIO_ODR_OD15;
+		segments(( % 100) / 10);
+		break;
+	case 3:
+		clear();
+		GPIOA->ODR |= GPIO_ODR_OD8;
+		GPIOA->ODR |= GPIO_ODR_OD15;
+		segments(( % 100) % 10);
+		break;
+	}
 
-int __io_putchar(int ch){
-    while(!(USART1->ISR & USART_ISR_TXE));
-    USART1->TDR = ch;
+	mux++;
+
+	if (mux > 3) {
+		mux = 0;
+	}
+
 }
 
 int main(void) {
