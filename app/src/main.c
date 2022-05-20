@@ -2,15 +2,21 @@
 #include <stm32l4xx.h>
 // Cédric Toye
 
-float temperatuur;
 float value;
-float V;
-float R;
 
 void delay(unsigned int n) {
 	volatile unsigned int delay = n;
-	while (delay--)
-		;
+	while (delay--);
+}
+
+void Read_I2C(void){
+	I2C1->CR2 |= (I2C_CR2_NBYTES_0 | I2C_CR2_STOP);
+	I2C1->CR2 |= IC2_CR2_START;
+
+}
+
+void write_I2C(void){
+
 }
 
 void SysTick_Handler(void) {
@@ -19,26 +25,26 @@ void SysTick_Handler(void) {
 		clear();
 		GPIOA->ODR &= ~GPIO_ODR_OD8;
 		GPIOA->ODR &= ~GPIO_ODR_OD15;
-		segments( / 1000);
+		segments( value / 1000);
 		break;
 	case 1:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD8;
 		GPIOA->ODR &= ~GPIO_ODR_OD15;
-		segments(( / 100) % 10);
+		segments(( value / 100) % 10);
 		break;
 	case 2:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD6;
 		GPIOA->ODR &= ~GPIO_ODR_OD8;
 		GPIOA->ODR |= GPIO_ODR_OD15;
-		segments(( % 100) / 10);
+		segments(( value % 100) / 10);
 		break;
 	case 3:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD8;
 		GPIOA->ODR |= GPIO_ODR_OD15;
-		segments(( % 100) % 10);
+		segments(( value % 100) % 10);
 		break;
 	}
 
@@ -47,7 +53,6 @@ void SysTick_Handler(void) {
 	if (mux > 3) {
 		mux = 0;
 	}
-
 }
 
 void clear(void) {
@@ -55,6 +60,7 @@ void clear(void) {
 	GPIOB->ODR &= ~(GPIO_ODR_OD0 | GPIO_ODR_OD12 | GPIO_ODR_OD15 | GPIO_ODR_OD1
 			| GPIO_ODR_OD2);
 }
+
 
 
 int main(void) {
@@ -88,6 +94,11 @@ int main(void) {
 	I2C1->CR2 |= (I2C_CR2_AUTOEND | I2C_CR2_NACK);
 	I2C1->CR1 |= I2C_CR1_PE;
 
+	//setting multiplexer
+	GPIOA->MODER &= ~(GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE15_Msk); // bitwise and operation of GPIOA MODER register and mask
+	GPIOA->MODER |= (GPIO_MODER_MODE8_0 | GPIO_MODER_MODE15_0); // bitwise or operation of GPIOA MODER register and 01 bits for pin 8 and pin 15
+	GPIOA->OTYPER &= ~(GPIO_OTYPER_OT8 | GPIO_OTYPER_OT15);
+
 	//setting segments
 	GPIOA->MODER &= ~(GPIO_MODER_MODE5_Msk | GPIO_MODER_MODE6_Msk
 			| GPIO_MODER_MODE7_Msk); // 7-B, 5-C, 6-DP
@@ -104,7 +115,6 @@ int main(void) {
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
 	while (1) {
-
 
 	}
 
