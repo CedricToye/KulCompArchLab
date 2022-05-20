@@ -50,6 +50,13 @@ void SysTick_Handler(void) {
 
 }
 
+void clear(void) {
+	GPIOA->ODR &= ~(GPIO_ODR_OD7 | GPIO_ODR_OD5 | GPIO_ODR_OD6);
+	GPIOB->ODR &= ~(GPIO_ODR_OD0 | GPIO_ODR_OD12 | GPIO_ODR_OD15 | GPIO_ODR_OD1
+			| GPIO_ODR_OD2);
+}
+
+
 int main(void) {
 
 	SysTick_Config(48000);
