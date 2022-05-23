@@ -2,22 +2,61 @@
 #include <stm32l4xx.h>
 // Cédric Toye
 
-float value;
+int mux = 0;
+int i = 0;
+float waarde;
+int angle = 0;
 
 void delay(unsigned int n) {
 	volatile unsigned int delay = n;
 	while (delay--);
 }
 
-void Read_I2C(void){
-	I2C1->CR2 |= (I2C_CR2_NBYTES_0 | I2C_CR2_STOP);
-	I2C1->CR2 |= IC2_CR2_START;
+void read_I2C(int reg){
+	while((I2C1->ISR & I2C_ISR_BUSY));
+	I2C1->CR2 &= ~(1<<10); //enable write mode
+	I2C1->CR2 &= ~I2C_CR2_AUTOEND_Msk;
+	I2C1->CR2 &= ~I2C_CR2_NBYTES_Msk;
+	I2C1->CR2 |= I2C_CR2_NACK_Msk;
+	I2C1->CR2 |=  (1 << 13)|(1 << 16)|(0x53 << 1);
 
+	while(((I2C1->ISR & (1<<4)) == 0) && ((I2C1->ISR & (1<<1)) == 0)){}
+
+	if((I2C1->ISR & (1<<4)) != 0){
+		return;
+	}
+
+    I2C1->TXDR = reg; //register doorsturen
+    while((I2C1->ISR & (1<<6)) == 0);
+
+    I2C1->CR2 |= I2C_CR2_AUTOEND_Msk;
+    I2C1->CR2 |= (1<<10); //enable read mode
+
+    //read
+    I2C1->CR2 |=  (1 << 16)|(0x53 << 1);
+    I2C1->CR2 |= (1<<13);
+    while(!(I2C1->ISR & I2C_ISR_RXNE));
+
+    return I2C1->RXDR;
 }
 
 void write_I2C(void){
+    I2C1->CR2 &= ~(1<<10);//enable write mode
+	I2C1->CR2 |= I2C_CR2_NACK_Msk;
+    I2C1->CR2 |=  (1 << 13)|(2 << 16)|(0x53 << 1);
+    while((I2C1->ISR & (1<<4)) == 0 && (I2C1->ISR & (1<<1)) == 0);
+    if((I2C1->ISR & (1<<4)) != 0){
+        return;
+    }
 
-}
+    I2C1->TXDR = reg; //register doorsturen
+
+    while(I2C1->ISR & (1<<4) == 0 && I2C1->ISR & (1<<1) == 0);
+    if((I2C1->ISR & (1<<4)) != 0){
+        return;
+    }
+    I2C1->TXDR = data;
+
 
 void SysTick_Handler(void) {
 	switch (mux) {
@@ -25,26 +64,26 @@ void SysTick_Handler(void) {
 		clear();
 		GPIOA->ODR &= ~GPIO_ODR_OD8;
 		GPIOA->ODR &= ~GPIO_ODR_OD15;
-		segments( value / 1000);
+		segments( angle / 1000);
 		break;
 	case 1:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD8;
 		GPIOA->ODR &= ~GPIO_ODR_OD15;
-		segments(( value / 100) % 10);
+		segments(( angle / 100) % 10);
 		break;
 	case 2:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD6;
 		GPIOA->ODR &= ~GPIO_ODR_OD8;
 		GPIOA->ODR |= GPIO_ODR_OD15;
-		segments(( value % 100) / 10);
+		segments(( angle % 100) / 10);
 		break;
 	case 3:
 		clear();
 		GPIOA->ODR |= GPIO_ODR_OD8;
 		GPIOA->ODR |= GPIO_ODR_OD15;
-		segments(( value % 100) % 10);
+		segments(( angle % 100) % 10);
 		break;
 	}
 
@@ -61,7 +100,10 @@ void clear(void) {
 			| GPIO_ODR_OD2);
 }
 
-
+int __io_putchar(int ch){
+    while(!(USART1->ISR & USART_ISR_TXE));
+    USART1->TDR = ch;
+}
 
 int main(void) {
 
@@ -73,10 +115,6 @@ int main(void) {
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN_Msk; // Activating clock block A
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN_Msk; // Activating clock block B
 	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN; // Activating clock I2C
-
-	// Klok selecteren voor ADC
-	RCC->CCIPR &= ~RCC_CCIPR_ADCSEL_Msk;
-	RCC->CCIPR |= (RCC_CCIPR_ADCSEL_0 | RCC_CCIPR_ADCSEL_1);
 
 	//Setting GPIO
 	GPIOB->MODER &= ~GPIO_MODER_MODE6_Msk;
@@ -114,8 +152,23 @@ int main(void) {
 	GPIOB->OTYPER &= ~(GPIO_OTYPER_OT0 | GPIO_OTYPER_OT1 | GPIO_OTYPER_OT2
 			| GPIO_OTYPER_OT12 | GPIO_OTYPER_OT15);
 
+	volatile int16_t array[3];
+	write_I2C(1<<3,0x2D);
+	array[0] =  read_I2C(0x2D);
+
 	while (1) {
+		for (int i = 0; i<3; i++){
+			array[i] = read_I2C(0x32+i*2)<<8+ read_I2C(0x32+i*2+1);
+			}
 
+		int xy = sqrt(array[0]^2+array[1]^2);
+		int xyz = sqrt(xy^2+array[2]^2);
+		printf("%2.2f",(acos(array[2]/(sqrt(array[0]*array[0]+array[1]*array[1]+array[2]*array[2]))))*(180/3.14));
+		printf("\n\r");
+		angle = (acos(array[2]/(sqrt(array[0]*array[0]+array[1]*array[1]+array[2]*array[2]))))*(180/3.14)*10;
+
+		delay(5000);
 	}
-
 }
+
+
